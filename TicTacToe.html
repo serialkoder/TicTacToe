@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td,
+    th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 40px;
+    }
+
+    div.solid {
+        border-style: solid;
+    }
+    </style>
+
+
+</head>
+
+<body>
+<script>
+
+class Cell {
+    constructor(i, j) {
+        this.i = i;
+        this.j = j;
+    }
+    toString() {
+        return (this.i + 1) + "_" + (this.j + 1);
+    }
+}
+
+// Variables
+var user_choice = "X";
+var comp_choice = "O";
+var row1 = ["", "", ""];
+var row2 = ["", "", ""];
+var row3 = ["", "", ""];
+var game_state = [row1, row2, row3];
+var solved = 0;
+
+// Reads user input
+function readChoice(v) {
+    user_choice = v;
+    if (user_choice == "O") {
+        comp_choice = "X";
+        playComputerChoice();
+    }
+}
+
+// Plays the users choice
+function playUserChoice(buttonId) {
+    // If the game is done return
+    if (solved == 1) {
+        return;
+    }
+    // If the cell is occupied do nothing
+    if(!isValid(buttonId)){
+        return;
+    }
+    // Change the clicked tile to users choice
+    document.getElementById(buttonId).src = user_choice + ".png";
+    updateGameState(buttonId, user_choice);
+    document.getElementById(buttonId).disabled = true;
+    playComputerChoice();
+}
+
+// Check if the tile is occupied.
+function isValid(buttonId){
+    var button_row = parseInt(buttonId.split("_")[0]) - 1;
+    var button_col = parseInt(buttonId.split("_")[1]) - 1;
+    if(game_state[button_row][button_col]==""){
+        return true;
+    }
+    return false;
+}
+
+
+// Mark the row and column as occupied. 
+function updateGameState(buttonId, val) {
+    var button_row = parseInt(buttonId.split("_")[0]) - 1;
+    var button_col = parseInt(buttonId.split("_")[1]) - 1;
+    // Update the row and column to the choice
+    game_state[button_row][button_col] = val;
+    isGameSolved();
+}
+
+// Check if the game is done.
+function isGameSolved(){
+    if (isDone(user_choice) == 1) {
+        solved = 1;
+        return;
+    }
+    if (isDone(comp_choice) == 1) {
+        solved = 1;
+        return;
+    }
+    if(findUnAssigned()==-1){
+        solved = 1;        
+        return;
+    }
+}
+
+// Check if we have a winner
+function isDone(choice) {
+    // Row Search
+    for (let i = 0; i < 3; i++) {
+        let count = 0;
+        for (let j = 0; j < 3; j++) {
+            if (game_state[i][j] == choice) {
+                count++;
+            }
+        }
+        if (count == 3) {
+            for (let j = 0; j < 3; j++) {
+                if (game_state[i][j] == choice) {
+                    document.getElementById(new Cell(i, j).toString()).src = "solved" + choice + ".png";
+                }
+            }
+            finalBanner(choice + "Wins");
+            return 1;
+        }
+    }
+    // Col Search
+    for (let i = 0; i < 3; i++) {
+        let count = 0;
+        for (let j = 0; j < 3; j++) {
+            if (game_state[j][i] == choice) {
+                count++;
+            }
+        }
+        if (count == 3) {
+            for (let j = 0; j < 3; j++) {
+                if (game_state[j][i] == choice) {
+                    document.getElementById(new Cell(j, i).toString()).src = "solved" + choice + ".png";
+                }
+            }
+            finalBanner(choice + "Wins");
+            return 1;
+        }
+    }
+    // Primary Diag Search
+    let pc = 0;
+    for (let i = 0; i < 3; i++) {
+        if (game_state[i][i] == choice) {
+            pc++;
+        }
+    }
+    if (pc == 3) {
+        for (let i = 0; i < 3; i++) {
+            if (game_state[i][i] == choice) {
+                document.getElementById(new Cell(i, i).toString()).src = "solved" + choice + ".png";
+            }
+        }
+        finalBanner(choice + "Wins");
+        return 1;
+    }
+    // Second Diagonal Search
+    var second_diag = [new Cell(2, 0), new Cell(1, 1), new Cell(0, 2)];
+    let sc = 0;
+    for (let cell in second_diag) {
+        if (game_state[second_diag[cell].i][second_diag[cell].j] == choice) {
+            sc++;
+        }
+    }
+    if (sc == 3) {
+        for (let cell in second_diag) {
+            if (game_state[second_diag[cell].i][second_diag[cell].j] == choice) {
+                console.log(second_diag[cell].toString());
+                document.getElementById(second_diag[cell].toString()).src = "solved" + choice + ".png";
+            }
+        }
+        finalBanner(choice + "Wins");
+        return 1;
+    }
+    return 0;
+}
+
+
+
+// Check if we have any empty tiles
+function findUnAssigned() {
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            // If a cell un assigned return that cell id.
+            if (game_state[i][j] == "") {
+                return (i + 1) + "_" + (j + 1);
+            }
+        }
+    }
+    finalBanner("XO");
+    return "-1";
+}
+// Update the game result
+function finalBanner(v) {
+    document.getElementById("finalBanner").src = v + ".png";
+}
+
+// Plays the users choice
+function playComputerChoice() {
+    if(solved==1){
+        return;
+    }
+    // See if computer has a winning move.
+    // If not see if user has a winning move.
+    // If not play any un assigned move.
+    var computer_winning_move = findWinningMove(comp_choice);
+    var user_winning_move = findWinningMove(user_choice);
+    var available = findUnAssigned();
+    if (computer_winning_move.i != -1) {
+        available = computer_winning_move.toString();
+    } else if (user_winning_move.i != -1) {
+        available = user_winning_move.toString();
+    }
+
+    if (available == "-1") {
+        return;
+    }
+    document.getElementById(available).src = comp_choice + ".png";
+    updateGameState(available, comp_choice);    
+    document.getElementById(available).disabled = true;
+}
+
+
+
+
+// Check if any palyer has a win on the next move.
+function findWinningMove(choice) {
+    // Row Search
+    var res = new Cell(-1, -1);
+    for (let i = 0; i < 3; i++) {
+        let count = 0;
+        let tc = 0;
+        res = new Cell(-1, -1);
+        for (let j = 0; j < 3; j++) {
+
+            if (game_state[i][j] == choice) {
+                count++;
+                tc++;
+            } else if (game_state[i][j] == "") {
+                res = new Cell(i, j);
+            } else {
+                tc++;
+            }
+
+        }
+        if (count == 2 && tc == 2) {
+            return res;
+        }
+    }
+    // Col Search
+    for (let i = 0; i < 3; i++) {
+        let count = 0;
+        let tc = 0;
+        res = new Cell(-1, -1);
+        for (let j = 0; j < 3; j++) {
+            if (game_state[j][i] == choice) {
+                count++;
+                tc++;
+            } else if (game_state[j][i] == "") {
+                res = new Cell(j, i);
+            } else {
+                tc++;
+            }
+        }
+        if (count == 2 && tc == 2) {
+            return res;
+        }
+    }
+    // Primary Diag Search
+    let pc = 0;
+    let ptc = 0;
+    res = new Cell(-1, -1);
+    for (let i = 0; i < 3; i++) {
+        if (game_state[i][i] == choice) {
+            pc++;
+            ptc++;
+        } else if (game_state[i][i] == "") {
+            res = new Cell(i, i);
+        } else {
+            ptc++;
+        }
+    }
+    if (pc == 2 && ptc == 2) {
+        return res;
+    }
+    // Second Diagonal Search
+    var second_diag = [new Cell(2, 0), new Cell(1, 1), new Cell(0, 2)];
+    let sc = 0;
+    let stc = 0;
+    for (let cell in second_diag) {
+        if (game_state[second_diag[cell].i][second_diag[cell].j] == choice) {
+            sc++;
+            stc++;
+
+        } else if (game_state[second_diag[cell].i][second_diag[cell].j] == "") {
+            res = new Cell(second_diag[cell].i, second_diag[cell].j);
+        } else {
+            stc++;
+        }
+    }
+    if (sc == 2 && stc == 2) {
+        return res;
+    }
+    return new Cell(-1, -1);
+}
+
+
+
+
+
+
+
+</script>
+    <h2>Tic Tac Toe</h2>
+    <div class="row">
+        <div class="column">
+            <img src="X.png" width="300" height="300" onclick="readChoice('X')">
+            <img src="O.png" width="300" height="300" onclick="readChoice('O')">
+            <img src="Blank.png" id="finalBanner" width="600" height="300">
+            <div class="column">
+                <img src="tile.png" id="1_1" onclick="playUserChoice('1_1')" width="200" height="200">
+                <img src="tile.png" id="1_2" onclick="playUserChoice('1_2')" width="200" height="200">
+                <img src="tile.png" id="1_3" onclick="playUserChoice('1_3')" width="200" height="200">
+            </div>
+            <div class="column">
+                <img src="tile.png" id="2_1" onclick="playUserChoice('2_1')" width="200" height="200">
+                <img src="tile.png" id="2_2" onclick="playUserChoice('2_2')" width="200" height="200">
+                <img src="tile.png" id="2_3" onclick="playUserChoice('2_3')" width="200" height="200">
+            </div>
+            <div class="column">
+                <img src="tile.png" id="3_1" onclick="playUserChoice('3_1')" width="200" height="200">
+                <img src="tile.png" id="3_2" onclick="playUserChoice('3_2')" width="200" height="200">
+                <img src="tile.png" id="3_3" onclick="playUserChoice('3_3')" width="200" height="200">
+            </div>
+        </div>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td,
+    th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 40px;
+    }
+    </style>
+</head>
+
+<body>
+    <script>
+    var user_choice = "X";
+
+    var row1 = ["", "", ""];
+    var row2 = ["", "", ""];
+    var row3 = ["", "", ""];
+    var game_state = [row1, row2, row3];
+
+    function readChoice(v) {
+        user_choice = v;
+        document.getElementById("X").disabled = true;
+        document.getElementById("O").disabled = true;
+    }
+
+    function playUserChoice(buttonId) {
+        if (user_choice == "") {
+            return;
+        }
+        updateGameState(buttonId, user_choice);
+        document.getElementById(buttonId).src = user_choice + ".png";
+        document.getElementById(buttonId).disabled = true;
+    }
+
+
+    function playComputerChoice() {
+        var available = findUnAssigned();
+        comp_choice = generateMove();
+        updateGameState(available, comp_choice);
+        document.getElementById(buttonId).src = comp_choice + ".png";
+        document.getElementById(buttonId).disabled = true;
+    }
+
+
+    function updateGameState(buttonId, val) {
+        var button_row = parseInt(buttonId.split("_")[1]) - 1;
+        var button_col = parseInt(buttonId.split("_")[2]) - 1;
+        game_state[button_row][button_col] = val;
+    }
+
+    function generateMove() {
+        if (user_choice == "X") {
+            return "O"
+        }
+        return "X";
+    }
+
+    function findUnAssigned() {
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (game_state[i][j] == "") {
+                    return "rc_" + (i + 1) + "_" + (j + 1);
+                }
+            }
+        }
+        return "-1";
+    }
+
+    function findOptimal() {
+
+    }
+    </script>
+    <div class="row">
+        <div class="column">
+            <img src="X.png" style="width:15%">
+            <img src="O.png" style="width:15%">
+        </div>
+        <div class="column">
+            <img src="tile.png" id="rc_1_1" onclick="playUserChoice('rc_1_1')" style="width:10%">
+            <img src="tile.png" id="rc_1_2" onclick="playUserChoice('rc_1_2')" style="width:10%">
+            <img src="tile.png" id="rc_1_3" onclick="playUserChoice('rc_1_3')" style="width:10%">
+        </div>
+        <div class="column">
+            <img src="tile.png" id="rc_2_1" onclick="playUserChoice('rc_2_1')" style="width:10%">
+            <img src="tile.png" id="rc_2_2" onclick="playUserChoice('rc_2_2')" style="width:10%">
+            <img src="tile.png" id="rc_2_3" onclick="playUserChoice('rc_2_3')" style="width:10%">
+        </div>
+        <div class="column">
+            <img src="tile.png" id="rc_3_1" onclick="playUserChoice('rc_3_1')" style="width:10%">
+            <img src="tile.png" id="rc_3_2" onclick="playUserChoice('rc_3_2')" style="width:10%">
+            <img src="tile.png" id="rc_3_3" onclick="playUserChoice('rc_3_3')" style="width:10%">
+        </div>
+    </div>
+</body>
+
+</html>
